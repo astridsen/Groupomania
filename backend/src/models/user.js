@@ -2,9 +2,11 @@ const { Sequelize, DataTypes } = require("sequelize");
 
 const sequelize = require('../utils/database');
 
+const Post = require('../models/post');
+
 const bcrypt = require("bcrypt");
 
-const user = sequelize.define("user", {
+const User = sequelize.define("user", {
       lastname: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -54,6 +56,7 @@ const user = sequelize.define("user", {
     },
     {
       sequelize,
+      modelName: "User",
       hooks: {
         beforeCreate: async (user) => {
           if (user.password) {
@@ -65,6 +68,15 @@ const user = sequelize.define("user", {
     },
 );
 
+User.associate = (Post) => {
+  User.hasMany(Post, 
+  {
+    foreignKey: "userId",
+    as: "posts",
+  });
+  return User;
+};
+
 sequelize.sync().then(() => {
     console.log('User table created successfully!');
  }).catch((error) => {
@@ -74,4 +86,4 @@ sequelize.sync().then(() => {
 // Exporting User, using this constant
 // we can perform CRUD operations on
 // 'user' table.
-module.exports = user
+module.exports = User

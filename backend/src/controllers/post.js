@@ -13,7 +13,7 @@ exports.createPost = (req, res) => {
             const userId = user.id;
             try {
                 const post = Post.create({ text, imageUrl, userId });
-                res.status(201).json({ post: post.id, message: 'Created post !' });
+                res.status(201).json({ message: 'Created post !' });
               } catch (error) { res.status(500).json({ error })}
         }})
     .catch((error) => res.status(500).send({ message: "User not found - Error: " + error })
@@ -28,10 +28,72 @@ exports.getOnePost = (req, res) => {
 
 exports.getAllPost = (req, res) => {
     Post.findAll()
-    .then((post) => {res.status(200).json(post);})
+    .then((post) => {res.status(200).json(post)})
     .catch((error) => {res.status(400).json({error: error});
       }
     );
+};
+
+/*exports.getAllPostsbyUser = (req, res) => {
+    User.findOne({where : { id: req.params.userId}})
+    .then((user) => {
+        if (!user) {
+            return res.status(401).json({ error: "User no found" }); 
+        } else {
+            Post.findAll({
+                where : { userId: req.params.id},
+                order: [['createdAt', 'DESC'],]
+            })
+            .then((posts) => {
+                const postList = posts.map(post => {
+                    return Object.assign({},
+                        {
+                            id: post.id,
+                            createdAt: post.createdAt,
+                            text: post.text,
+                            imageUrl: post.imageUrl,
+                            userId: req.params.id,
+                            lastname: post.User.lastname,
+                            firstname: post.User.firsname,
+                            pictureUrl: post.User.pictureUrl
+                        }
+                    )
+                })
+                res.status(200).json({postList})
+            })
+            .catch((error) => {res.status(400).json({error: error})});
+        }})
+    .catch((error) => {res.status(500).json({error: error});
+    })
+}*/
+
+exports.getAllPostsbyUser = (req, res, next) => {
+    Post.findAll({
+        where: { userId: req.params.id },
+        include: {
+            model : User,
+            attributes: ["lastname", "firstname", "pictureUrl"]
+        },
+        order: [["id", "DESC"]]
+    })
+    .then(posts => {
+        const postList = posts.map(post => {
+            return Object.assign({},
+                {
+                    id: post.id,
+                    createdAt: post.createdAt,
+                    text: post.text,
+                    imageUrl: post.imageUrl,
+                    userId: post.userId,
+                    lastname: post.User.lastname,
+                    firstname: post.User.firstname,
+                    pictureUrl: post.User.pictureUrl,
+                }
+            )
+        })
+        res.status(200).json({ postList })
+    })
+    .catch(error => res.status(400).json({error: error}))
 };
 
 exports.updatePost = (req, res, next) => {
@@ -41,10 +103,10 @@ exports.updatePost = (req, res, next) => {
     } : { ...req.body };
   
     delete postObject.userId;
-    Post.findOne( { where : {id: req.params.id}})
+    Post.findOne( { where : {id: req.params.id }})
         .then((post) => {
-            if (post.userId != req.auth.userId) {
-                res.status(401).json({ message : 'Not authorized'});
+            if (post.userId != req.auth.userId && req.auth.isAdmin != true ) {
+                res.status(401).json({ message : 'Not authorized' });
             } else {
                 Post.update(
                     {
@@ -68,8 +130,8 @@ exports.updatePost = (req, res, next) => {
 
 exports.deletePost = (req, res) => {
     Post.findOne( { where : { id: req.params.id }})
-        .then(post => {
-            if (post.userId != req.auth.userId) {
+        .then((post) => {
+            if (post.userId != req.auth.userId && req.auth.isAdmin != true ) {
                 res.status(401).json({ message: 'Not authorized' });
             } else {
                 Post.destroy( { where : { id: req.params.id}})
@@ -81,3 +143,4 @@ exports.deletePost = (req, res) => {
             res.status(500).json({ error });
         });
 };
+

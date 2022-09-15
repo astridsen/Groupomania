@@ -1,8 +1,10 @@
 const { Sequelize, DataTypes  } = require("sequelize");
 
+const user = require('../models/user');
+
 const sequelize = require('../utils/database');
 
-const post = sequelize.define("post", {
+const Post = sequelize.define("post", {
       text: {
         type: DataTypes.TEXT,
         allowNull: false,
@@ -16,19 +18,16 @@ const post = sequelize.define("post", {
       imageUrl: {
         type: DataTypes.STRING,
       },
-      likes: { 
-        type: DataTypes.INTEGER,
-    },
-    dislikes: {
-        type: DataTypes.INTEGER,
-    },
-    usersLiked: {
-        type: DataTypes.STRING,
-    },
-    usersDisliked: {
-        type: DataTypes.STRING,
-    },
 },);
+
+Post.associate = (user) => {
+    Post.belongsTo(user, 
+    {
+      foreignKey: "userId",
+      as: "users",
+    });
+    return Post;
+};
 
 sequelize.sync().then(() => {
     console.log('Post table created successfully!');
@@ -36,4 +35,4 @@ sequelize.sync().then(() => {
     console.error('Unable to create table : ', error);
 });
   
-module.exports = post
+module.exports = Post

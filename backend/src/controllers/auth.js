@@ -4,12 +4,10 @@ const User = require('../models/user');
 
 const jwt = require('jsonwebtoken');
 
-//const fs = require('fs');
-
 exports.signup = (req, res) => {
-    const { firstname, lastname, email, password } = req.body;
+    const { firstname, lastname, email, password, isAdmin } = req.body;
     try {
-        const user = User.create({ firstname, lastname, email, password });
+        const user = User.create({ firstname, lastname, email, password, isAdmin });
         res.status(201).json({ user: user.id, message: 'Created user !' });
       } catch (error) {
         res.status(500).json({ error })
@@ -29,8 +27,10 @@ exports.login = (req, res) => {
                     }
                     res.status(200).json({
                         userId: user.id,
+                        isAdmin: user.isAdmin,
                         token: jwt.sign(
-                            { userId: user.id },
+                            { userId: user.id,
+                             isAdmin: user.isAdmin },
                             'RANDOM_TOKEN_SECRET',
                             { expiresIn: '24h' }
                         )
