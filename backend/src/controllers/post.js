@@ -27,45 +27,14 @@ exports.getOnePost = (req, res) => {
 };
 
 exports.getAllPost = (req, res) => {
-    Post.findAll()
+    Post.findAll(
+       { order: [["id", "DESC"]] }
+    )
     .then((post) => {res.status(200).json(post)})
     .catch((error) => {res.status(400).json({error: error});
       }
     );
 };
-
-/*exports.getAllPostsbyUser = (req, res) => {
-    User.findOne({where : { id: req.params.userId}})
-    .then((user) => {
-        if (!user) {
-            return res.status(401).json({ error: "User no found" }); 
-        } else {
-            Post.findAll({
-                where : { userId: req.params.id},
-                order: [['createdAt', 'DESC'],]
-            })
-            .then((posts) => {
-                const postList = posts.map(post => {
-                    return Object.assign({},
-                        {
-                            id: post.id,
-                            createdAt: post.createdAt,
-                            text: post.text,
-                            imageUrl: post.imageUrl,
-                            userId: req.params.id,
-                            lastname: post.User.lastname,
-                            firstname: post.User.firsname,
-                            pictureUrl: post.User.pictureUrl
-                        }
-                    )
-                })
-                res.status(200).json({postList})
-            })
-            .catch((error) => {res.status(400).json({error: error})});
-        }})
-    .catch((error) => {res.status(500).json({error: error});
-    })
-}*/
 
 exports.getAllPostsbyUser = (req, res, next) => {
     Post.findAll({
@@ -85,9 +54,6 @@ exports.getAllPostsbyUser = (req, res, next) => {
                     text: post.text,
                     imageUrl: post.imageUrl,
                     userId: post.userId,
-                    lastname: post.User.lastname,
-                    firstname: post.User.firstname,
-                    pictureUrl: post.User.pictureUrl,
                 }
             )
         })

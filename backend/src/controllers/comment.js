@@ -20,4 +20,58 @@ exports.createComment = (req, res) => {
                 return res.status(400).send(error);
             }}})
         .catch((error) => res.status(500).send({ message: "Comment not created" + error }))
-    };
+};
+
+exports.deleteComment = (req, res) => {
+    Comment.findOne({
+      where: { id: req.params.id },
+    })
+      .then(() => {
+        Comment.destroy({
+          where: {
+            id: req.params.id,
+          },
+        })
+          .then(() => res.status(200).json({ message: "Comment deleted" }))
+          .catch((error) => res.status(400).send({ message: "Error: " + error }));
+      })
+      .catch((error) =>
+        res.status(500).send({ message: "Comment not found - Error: " + error })
+      );
+};
+
+exports.getAllComments = (req, res) => {
+    Comment.findAll({
+      where: {
+        postId: req.params.postId,
+      },
+      order: [["createdAt", "DESC"]],
+    })
+      .then((comments) => res.status(200).json(comments))
+      .catch((error) => res.status(400).send(error));
+};
+
+exports.updateComment = (req, res) => {
+    Comment.findOne({
+      where: { id: req.params.id },
+    })
+      .then((comment) => {
+            if (comment.userId != req.auth.userId && req.auth.isAdmin != true ) {
+                res.status(401).json({ message : 'Not authorized' });
+            } else {
+            Comment.update(
+                {
+                    text: req.body.text,
+                },
+                {
+                where: {
+                id: req.params.id,
+                },
+                })
+            .then(() => res.status(200).send({ message: "Comment updated" }))
+            .catch((error) => res.status(400).send({ message: "Error: " + error }));
+            }
+        })
+      .catch((error) => res.status(500).send({ message: "Comment not found - Error: " + error })
+      );
+};
